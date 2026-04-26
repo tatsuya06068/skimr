@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import posthog from "posthog-js";
 
 type GenerateResult = {
   imageUrl: string;
@@ -57,6 +58,8 @@ export default function Home() {
   const handleSave = () => {
     if (!downloadReady || !downloadBlobUrl) return;
 
+    posthog.capture("download_clicked");
+
     const link = document.createElement("a");
     link.href = downloadBlobUrl;
     link.download = "skimr-wallpaper.png";
@@ -67,6 +70,9 @@ export default function Home() {
 
   const handleGenerate = async () => {
     if (status === "loading" || !feeling.trim()) return;
+
+    posthog.capture("generate_clicked", { emotion: feeling });
+
     setStatus("loading");
     setError(null);
     setResult(null); // Fade out previous result
@@ -97,6 +103,8 @@ export default function Home() {
         caption: textData.text,
       });
       setStatus("result");
+
+      posthog.capture("image_generated");
     } catch (err) {
       setError("生成に失敗しました。");
       setStatus("initial");
