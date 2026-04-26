@@ -1,0 +1,16 @@
+services:
+  front:
+    build:
+      context: ./frontNext.js
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    env_file:
+      - ./frontNext.js/.env
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./frontNext.js:/app
+      - /app/node_modules
+    command: npm run dev -- --hostname 0.0.0.0
+    restart: unless-stopped
