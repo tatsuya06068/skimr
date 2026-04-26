@@ -21,17 +21,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing or invalid 'input'" }, { status: 400 });
     }
 
-    const prompt = `Abstract painting expressing exhaustion and melancholic heaviness. Not a background but a quiet, oppressive artwork.
-Brush strokes, rough textures, uneven paint. No smooth gradients.
-Composition: Asymmetrical with vertical depth (like bottom of a well). Top faint/distant, middle blurred/sinking inward, bottom darkest/heaviest. Clear contrast.
-Structure: One subtle off-center focal area like a distant opening. Surroundings heavier and enclosing.
-Space: Suggest enclosure (walls/ruins). Sides darker/heavier than center, feeling trapped.
-Emotion: Heavy, slow, blurred, oppressive with melancholic tone. Shapes dissolve or sink inward.
-Texture: Mix thick/thin paint, uneven density, heavier at bottom/sides.
-Color: Low saturation, gray/muted blue/dark brown, very limited dull red. No bright tones.
-Avoid: Uniform texture, flat color, gradients, symmetry, decorative look.
-Output: Quiet fatigue with depth, enclosure, and stillness.
-Emotion: ${body.input}${body.state ? ` (${body.state})` : ""}`;
+    const prompt = `Abstract painting expressing exhaustion as continuous life without answers. Not a background but a quiet oppressive artwork.
+Rough brush strokes with strong vertical streaks like rain or dripping walls. Uneven layered paint. No smooth gradients.
+Composition: Asymmetrical with vertical depth. Top faint/distant, middle blurred and sinking inward, bottom darkest/heaviest. Downward flow.
+Structure: Include faint human-like silhouettes, elongated and vertical, partially dissolved into the background. Not clear figures.
+Space: Enclosed and deep. Sides darker than center.
+Emotion: Heavy, slow, ongoing. Shapes dissolve and sink but do not disappear.
+Texture: Mix thick and thin paint with visible streaks.
+Color: Very low saturation, dark gray, black, muted blue/green, slight dull red. No bright tones.
+Avoid: Flat fill, smooth blending, symmetry, decorative look.
+Output: Dark textured scene with vertical flow and vague human shadows.
+motion: ${body.input}${body.state ? ` (${body.state})` : ""}`;
 
     const openaiResponse = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
