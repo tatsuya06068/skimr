@@ -15,33 +15,54 @@ export default function Home() {
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [captionVisible, setCaptionVisible] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [downloadReady, setDownloadReady] = useState(false);
+  const [downloadBlobUrl, setDownloadBlobUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    let blobUrl: string | null = null;
+    let timer: ReturnType<typeof setTimeout>;
+
+    setCaptionVisible(false);
+    setImageLoaded(false);
+    setDownloadReady(false);
+    setDownloadBlobUrl(null);
+
     if (result) {
-      setCaptionVisible(false);
-      const timer = setTimeout(() => setCaptionVisible(true), 100);
-      return () => clearTimeout(timer);
+      timer = setTimeout(() => setCaptionVisible(true), 100);
+
+      (async () => {
+        try {
+          const response = await fetch(`/api/download?url=${encodeURIComponent(result.imageUrl)}`);
+          if (!response.ok) throw new Error("Failed to preload image");
+          const blob = await response.blob();
+          blobUrl = URL.createObjectURL(blob);
+          if (!isMounted) return;
+          setDownloadBlobUrl(blobUrl);
+          setDownloadReady(true);
+        } catch (error) {
+          console.error("Image prefetch failed", error);
+        }
+      })();
     }
+
+    return () => {
+      isMounted = false;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+      if (timer) clearTimeout(timer);
+    };
   }, [result]);
 
-  const handleSave = async () => {
-    if (!result) return;
-    try {
-      const response = await fetch(`/api/download?url=${encodeURIComponent(result.imageUrl)}`);
-      if (!response.ok) throw new Error('Download failed');
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'skimr-wallpaper.png';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Download failed', error);
-      setError('ダウンロードに失敗しました。');
-    }
+  const handleSave = () => {
+    if (!downloadReady || !downloadBlobUrl) return;
+
+    const link = document.createElement("a");
+    link.href = downloadBlobUrl;
+    link.download = "skimr-wallpaper.png";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleGenerate = async () => {
@@ -139,25 +160,38 @@ export default function Home() {
             ) : null}
 
             <div className={`space-y-4 transition-all duration-500 ${status === "result" ? "opacity-100" : "pointer-events-none opacity-0"}`}>
-              <div className="overflow-hidden rounded-[2rem] bg-[#0F1115]">
-                {result?.imageUrl && (
-                  <img
-                    src={result.imageUrl}
-                    alt="Generated wallpaper"
-                    className="h-[320px] w-full object-cover"
-                  />
-                )}
-              </div>
-              <p className={`text-center text-sm text-[#A0A3AA] transition-opacity duration-300 ${captionVisible ? "opacity-100" : "opacity-0"}`}>
-                {result?.caption || "あなたの気分をやさしく表現した壁紙"}
-              </p>
-              <button
-                type="button"
-                onClick={handleSave}
-                className="w-full rounded-[1.75rem] bg-[#7AA7F9] px-5 py-4 text-base font-semibold text-[#0F1115] shadow-[0_20px_40px_rgba(122,167,249,0.25)] transition duration-200 hover:bg-[#6A96E0] hover:shadow-[0_22px_45px_rgba(122,167,249,0.30)] focus:outline-none focus:ring-2 focus:ring-[#7AA7F9]/40"
-              >
-                壁紙として保存
-              </button>
+              <div className="overflow-hidden rounded-[2rem] bg-[#0F1115] relative">
+              {result?.imageUrl && (
+                <img
+                  src={result.imageUrl}
+                  alt="Generated wallpaper"
+                  loading="eager"
+                  decoding="async"
+                  className={`h-[320px] w-full object-cover rounded-[2rem] transition-opacity duration-500 ${
+                    imageLoaded ? "opacity-100" : "opacity-0"
+                  }`}
+                  onLoad={() => setImageLoaded(true)}
+                />
+              )}
+              {!imageLoaded && result?.imageUrl && (
+                <div className="absolute inset-0 rounded-[2rem] bg-white/5" />
+              )}
+            </div>
+            <p className={`text-center text-sm text-[#A0A3AA] transition-opacity duration-300 ${captionVisible ? "opacity-100" : "opacity-0"}`}>
+              {result?.caption || "あなたの気分をやさしく表現した壁紙"}
+            </p>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={!downloadReady}
+              className={`w-full rounded-[1.75rem] px-5 py-4 text-base font-semibold text-[#0F1115] shadow-[0_20px_40px_rgba(122,167,249,0.25)] transition duration-200 ${
+                downloadReady
+                  ? "bg-[#7AA7F9] hover:bg-[#6A96E0] hover:shadow-[0_22px_45px_rgba(122,167,249,0.30)]"
+                  : "cursor-not-allowed bg-[#7AA7F9]/60 text-[#A0A3AA]"
+              } focus:outline-none focus:ring-2 focus:ring-[#7AA7F9]/40`}
+            >
+              {downloadReady ? "壁紙として保存" : "保存を準備中..."}
+            </button>
             </div>
           </div>
         </section>
