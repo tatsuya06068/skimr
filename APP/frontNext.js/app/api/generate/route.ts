@@ -21,9 +21,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing or invalid 'input'" }, { status: 400 });
     }
 
-    const prompt = `Create an abstract wallpaper image representing the feeling: ${body.input}. ${
-      body.state ? `Desired state: ${body.state}. ` : ""
-    }The image should be abstract only, no real-world objects, no people, no landscape. Minimal, calm, soft gradient. Dark mode friendly. Leave top space for phone clock. No text inside image.`;
+    const prompt = `Abstract painting expressing exhaustion and melancholic heaviness. Not a background but a quiet, oppressive artwork.
+        Brush strokes, rough textures, uneven paint. No smooth gradients.
+        Composition: Asymmetrical with vertical depth (like bottom of a well). Top faint/distant, middle blurred/sinking inward, bottom darkest/heaviest. Clear contrast.
+        Structure: One subtle off-center focal area like a distant opening. Surroundings heavier and enclosing.
+        Space: Suggest enclosure (walls/ruins). Sides darker/heavier than center, feeling trapped.
+        Emotion: Heavy, slow, blurred, oppressive with melancholic tone. Shapes dissolve or sink inward.
+        Texture: Mix thick/thin paint, uneven density, heavier at bottom/sides.
+        Color: Low saturation, gray/muted blue/dark brown, very limited dull red. No bright tones.
+        Avoid: Uniform texture, flat color, gradients, symmetry, decorative look.
+        Output: Quiet fatigue with depth, enclosure, and stillness.
+        Emotion: ${body.input}${body.state ? ` (${body.state})` : ""}`;
 
     const openaiResponse = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
